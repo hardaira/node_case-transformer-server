@@ -1,6 +1,7 @@
 // src/createServer.js
 const http = require('http');
 const { convertToCase } = require('./convertToCase/convertToCase');
+
 function createServer() {
   return http.createServer((req, res) => {
     const url = new URL(req.url, `http://${req.headers.host}`);
@@ -29,15 +30,13 @@ function createServer() {
     }
 
     if (errors.length > 0) {
-      res.writeHead(400, { 'Content-Type': 'application/json' });
+      res.writeHead(400, 'Bad request', { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ errors }));
 
       return;
     }
 
-
     try {
-
       const { originalCase, convertedText } = convertToCase(text, toCase);
       // console.log('DEBUG:', { originalCase, convertedText });
 
@@ -48,7 +47,7 @@ function createServer() {
         convertedText,
       };
 
-      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.writeHead(200, 'OK', { 'Content-Type': 'application/json' });
       res.end(JSON.stringify(response));
     } catch (err) {
       res.writeHead(500, { 'Content-Type': 'application/json' });
