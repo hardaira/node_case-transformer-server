@@ -1,3 +1,63 @@
-// Write code here
-// Also, you can create additional files in the src folder
-// and import (require) them here
+// src/createServer.js
+const http = require('http');
+const { convertToCase } = require('./convertToCase/convertToCase');
+const { detectCase } = require('./convertToCase/detectCase');
+
+function createServer() {
+  return http.createServer((req, res) => {
+    const url = new URL(req.url, `http://${req.headers.host}`);
+    const text = decodeURIComponent(url.pathname.slice(1));
+    const toCase = url.searchParams.get('toCase');
+
+    const availableCases = ['SNAKE', 'KEBAB', 'CAMEL', 'PASCAL', 'UPPER'];
+    const errors = [];
+
+    if (!text) {
+      errors.push({
+        message:
+          'Text to convert is required. Use format: /<TEXT>?toCase=<CASE_NAME>',
+      });
+    }
+
+    if (!toCase) {
+      errors.push({
+        message:
+          '"toCase" query param is required. Use format: /<TEXT>?toCase=<CASE_NAME>',
+      });
+    } else if (!availableCases.includes(toCase)) {
+      errors.push({
+        message: `Unsupported case: "${toCase}". Available cases: ${availableCases.join(', ')}`,
+      });
+    }
+
+    if (errors.length > 0) {
+      res.writeHead(400, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ errors }));
+      return;
+    }
+
+    try {
+      const originalCase = detectCase(text);
+      const convertedText = convertToCase(text, toCase);
+
+      const response = {
+        originalCase,
+        targetCase: toCase,
+        originalText: text,
+        convertedText,
+      };
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify(response));
+    } catch (err) {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(
+        JSON.stringify({
+          errors: [{ message: 'Internal server error: ' + err.message }],
+        }),
+      );
+    }
+  });
+}
+
+module.exports = { createServer };
