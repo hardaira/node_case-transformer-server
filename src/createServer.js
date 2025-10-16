@@ -14,25 +14,26 @@ function createServer() {
 
     if (!text) {
       errors.push({
-        message:
-          'Text to convert is required. Use format: /<TEXT>?toCase=<CASE_NAME>',
+        message: `Text to convert is required. Correct request is: "/<TEXT_TO_CONVERT>?toCase=<CASE_NAME>".`,
       });
     }
 
     if (!toCase) {
       errors.push({
         message:
-          '"toCase" query param is required. Use format: /<TEXT>?toCase=<CASE_NAME>',
+          '"toCase" query param is required. ' +
+  'Correct request is: "/<TEXT_TO_CONVERT>?toCase=<CASE_NAME>".',
       });
     } else if (!availableCases.includes(toCase)) {
       errors.push({
-        message: `Unsupported case: "${toCase}". Available cases: ${availableCases.join(', ')}`,
+        message: `This case is not supported. Available cases: SNAKE, KEBAB, CAMEL, PASCAL, UPPER.`,
       });
     }
 
     if (errors.length > 0) {
       res.writeHead(400, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ errors }));
+
       return;
     }
 
@@ -51,6 +52,7 @@ function createServer() {
       res.end(JSON.stringify(response));
     } catch (err) {
       res.writeHead(500, { 'Content-Type': 'application/json' });
+
       res.end(
         JSON.stringify({
           errors: [{ message: 'Internal server error: ' + err.message }],
