@@ -1,44 +1,47 @@
-// src/createServer.js
 const http = require('http');
 const { convertToCase } = require('./convertToCase/convertToCase');
 
 function createServer() {
   return http.createServer((req, res) => {
-    const url = new URL(req.url, `http://${req.headers.host}`);
-    const text = decodeURIComponent(url.pathname.slice(1));
-    const toCase = url.searchParams.get('toCase');
+    const [path, queryString] = req.url.split('?');
+    const text = decodeURIComponent(path.slice(1));
+    const params = new URLSearchParams(queryString || '');
+    const toCase = params.get('toCase');
 
     const availableCases = ['SNAKE', 'KEBAB', 'CAMEL', 'PASCAL', 'UPPER'];
     const errors = [];
 
     if (!text) {
       errors.push({
-        message: `Text to convert is required. Correct request is: "/<TEXT_TO_CONVERT>?toCase=<CASE_NAME>".`,
+        message:
+          'Text to convert is required.' + 
+          'Correct request is: "/<TEXT_TO_CONVERT>?toCase=<CASE_NAME>".',
       });
     }
 
     if (!toCase) {
       errors.push({
         message:
-          '"toCase" query param is required. ' +
+          '"toCase" query param is required.' +
           'Correct request is: "/<TEXT_TO_CONVERT>?toCase=<CASE_NAME>".',
       });
     } else if (!availableCases.includes(toCase)) {
       errors.push({
-        message: `This case is not supported. Available cases: SNAKE, KEBAB, CAMEL, PASCAL, UPPER.`,
+        message:
+          'This case is not supported.' +
+          'Available cases: SNAKE, KEBAB, CAMEL, PASCAL, UPPER.',
       });
     }
 
     if (errors.length > 0) {
-      res.writeHead(400, { 'Content-Type': 'application/json' });
+      res.writeHead(400, 'Bad request', { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ errors }));
 
       return;
     }
 
     try {
-      const { originalCase, convertedText } = convertToCase(text, toCase);
-      // console.log('DEBUG:', { originalCase, convertedText });
+      const { originalCase, convertedText } = convertToCase(toCase, text);
 
       const response = {
         originalCase,
@@ -47,10 +50,12 @@ function createServer() {
         convertedText,
       };
 
-      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.writeHead(200, 'OK', { 'Content-Type': 'application/json' });
       res.end(JSON.stringify(response));
     } catch (err) {
-      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.writeHead(500, 'Internal Server Error', {
+        'Content-Type': 'application/json',
+      });
 
       res.end(
         JSON.stringify({
