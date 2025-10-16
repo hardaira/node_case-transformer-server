@@ -1,7 +1,6 @@
 // src/createServer.js
 const http = require('http');
 const { convertToCase } = require('./convertToCase/convertToCase');
-const { detectCase } = require('./convertToCase/detectCase');
 
 function createServer() {
   return http.createServer((req, res) => {
@@ -22,7 +21,7 @@ function createServer() {
       errors.push({
         message:
           '"toCase" query param is required. ' +
-  'Correct request is: "/<TEXT_TO_CONVERT>?toCase=<CASE_NAME>".',
+          'Correct request is: "/<TEXT_TO_CONVERT>?toCase=<CASE_NAME>".',
       });
     } else if (!availableCases.includes(toCase)) {
       errors.push({
@@ -38,8 +37,8 @@ function createServer() {
     }
 
     try {
-      const originalCase = detectCase(text);
-      const convertedText = convertToCase(text, toCase);
+      const { originalCase, convertedText } = convertToCase(text, toCase);
+      // console.log('DEBUG:', { originalCase, convertedText });
 
       const response = {
         originalCase,
